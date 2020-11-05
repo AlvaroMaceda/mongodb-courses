@@ -1,0 +1,14 @@
+
+// How many companies in the sample_training.companies collection have the same permalink as their twitter_username?
+
+use('sample_training');
+
+db.companies.find({
+  $expr: {
+    $eq: [
+      "$permalink" ,
+      "$twitter_username"
+      ]
+    }
+  }
+,{permalink:1, twitter_username:1}).count();

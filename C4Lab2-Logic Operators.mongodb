@@ -1,6 +1,6 @@
 // Select the database to use.
 use('sample_training');
-
+use('sample_training');
 /*
  (either founded in 2004, or in the month of October)
  and (either have the social category_code or web category_code?)
