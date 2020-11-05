@@ -1,0 +1,21 @@
+// Select the database to use.
+use('sample_training');
+
+/*
+ (either founded in 2004, or in the month of October)
+ and (either have the social category_code or web category_code?)
+*/
+use('sample_training');
+db.companies.find({
+  $and: [
+    { $or: [
+      { founded_year: 2004 },
+      { founded_month: 10 }
+    ]},
+    { $or: [ 
+      {category_code: "social"}, 
+      {category_code: "web"} 
+    ]}
+  ]
+}
+,{founded_year:1, founded_month:1, category_code: 1}).count();
