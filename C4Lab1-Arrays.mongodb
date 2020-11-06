@@ -1,0 +1,11 @@
+
+// What is the name of the listing in the sample_airbnb.listingsAndReviews dataset that 
+// accommodates more than 6 people and has exactly 50 reviews?
+
+// Copy/Paste the value of the "name" field into the response field without quotation marks.
+use('sample_airbnb');
+db.listingsAndReviews.find({
+  reviews: { $size: 50},
+  accommodates: { "$gt": 6 }
+}
+,{name: 1, accommodates:1, reviews:1}).pretty();
