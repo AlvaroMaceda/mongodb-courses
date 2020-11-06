@@ -1,0 +1,9 @@
+// Latitude decreases in value as you move west.
+//
+// How many trips in the sample_training.trips collection started at stations that are to the west of the -74 latitude coordinate?
+use('sample_training');
+
+db.trips.find({
+  "start station location.coordinates.0": { "$lt": -74}
+}  
+,{"start station location":1}).count();
