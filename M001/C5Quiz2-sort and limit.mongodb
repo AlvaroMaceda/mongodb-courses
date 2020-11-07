@@ -1,0 +1,8 @@
+// In what year was the youngest bike rider from the sample_training.trips collection born?
+
+use('sample_training');
+
+db.trips.find(
+  { "birth year": { $ne: ""} },
+  {  "birth year":1, _id: 1}
+).sort({ "birth year": -1 }).limit(20)
