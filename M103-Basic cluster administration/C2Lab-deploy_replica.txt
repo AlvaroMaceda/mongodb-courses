@@ -1,0 +1,20 @@
+storage:
+  dbPath: /var/mongodb/db/1
+net:
+  bindIp: localhost
+  port: 27001
+security:
+  authorization: enabled
+  keyFile: /var/mongodb/pki/m103-keyfile  
+systemLog:
+  destination: file
+  path: /var/mongodb/logs/mongod1.log
+  logAppend: true
+processManagement:
+  fork: true
+replication:
+  replSetName: m103-repl
+
+Important: first initiate replica with rs.init() or you won't be able to add the user  
+
+

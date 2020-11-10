@@ -1,0 +1,20 @@
+// The m103-admin user has also already been created for you with password m103-pass.
+// Use the db.createUser() command to create a user for a CRUD application.
+
+// The requirements for this new user are:
+
+//     Role: readWrite on applicationData database
+//     Authentication source: admin
+//     Username: m103-application-user
+//     Password: m103-application-pass
+
+// mongo mongodb://m103-admin:m103-pass@localhost:27000/
+
+// use 'admin'
+db = db.getSiblingDB('admin')
+db.createUser(
+  { user: "m103-application-user",
+    pwd: "m103-application-pass",
+    roles: [ { db: "applicationData", role: "readWrite" } ]
+  }
+)
