@@ -1,0 +1,52 @@
+/*
+Chapter 2: Replication
+Lab: Reconfigure a Replica Set
+
+Problem:
+
+A 4-node replica set has already been launched. You can find the configuration files used to start each server in the IDE.
+
+Reconfigure the replica set to make one node more suitable for analytics queries:
+
+    Connect to the replica set m103-repl and retrieve the configuration of the node localhost:27004. 
+    This is the node you will reconfigure.
+
+    Remember to authenticate as m103-admin with password m103-pass.
+
+    Store this configuration in a variable and use this variable to update the following fields in 
+    the configuration document for localhost:27004:
+        the number of votes should be 0
+        the hidden field should be true
+        the priority should be 0
+*/
+
+
+// Connection
+mongo mongodb://m103-admin:m103-pass@localhost:27001
+
+// To find the node localhost:27004
+var status = rs.status()
+status.members[3]
+
+// To reconfigure
+var conf = rs.conf()
+conf.members[3]
+{
+        "_id" : 3,
+        "host" : "localhost:27004",
+        "arbiterOnly" : false,
+        "buildIndexes" : true,
+        "hidden" : false,
+        "priority" : 1,
+        "tags" : {
+
+        },
+        "slaveDelay" : NumberLong(0),
+        "votes" : 1
+}
+
+conf.members[3].votes = 0
+conf.members[3].hidden = true
+conf.members[3].priority = 0
+
+rs.reconfig(conf)
