@@ -1,0 +1,44 @@
+/*
+Use mongoimport to import the data in /dataset/products.json:
+    import this dataset onto m103.products
+*/
+
+// 1) Import data
+mongoimport --uri mongodb://m103-admin:m103-pass@localhost:26000/m103?authSource=admin --collection products /dataset/products.json
+
+/*
+Enable sharding on the m103 database.
+Two shards have already been added to your cluster, shard1 and shard2. For more information, run sh.status() on mongos.
+*/
+
+{...
+shards:
+        {  "_id" : "shard1",  "host" : "shard1/localhost:27001,localhost:27002,localhost:27003",  "state" : 1 }
+        {  "_id" : "shard2",  "host" : "shard2/localhost:27007,localhost:27008,localhost:27009",  "state" : 1 }
+...
+}
+
+mongo mongodb://m103-admin:m103-pass@localhost:26000/m103?authSource=admin 
+sh.enableSharding("m103")
+
+/*
+Choose a shard key for the m103.products collection.
+
+Review the qualities of a good shard key in the docs and the following information about the products collection:
+
+    _id is a serial number for each product in this collection, rarely used in queries but important for internal MongoDB usage
+    sku (Stock Keeping Unit) is a randomly generated integer unique to each product - this is commonly used to refer to specific products when updating stock quantities
+    name is the name of the product as it appears in the store and on the website
+    type is the type of product, with the possible values "Bundle", "Movie", "Music" and "Software"
+    regularPrice is the regular price of the product, when there is no sale this price changes every season
+    salePrice is the price of a product during a sale - this price changes arbitrarily based on when sales occur
+    shippingWeight is the weight of the product in kilograms, ranging between 0.01 and 1.00 - this value is not known for every product in the collection
+*/
+
+// "type" key: (didn't worked)
+db.products.createIndex({ "type": 1 })
+sh.shardCollection("m103.products", { "type": 1} )
+
+// "sku" key:
+db.products.createIndex({ "sku": 1 })
+sh.shardCollection("m103.products", { "sku": 1} )
