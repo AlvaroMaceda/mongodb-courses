@@ -1,0 +1,23 @@
+use test;
+db.foo.drop()
+
+let docs
+docs = [
+  {
+    f1: "a",
+    f2: "a",
+    f3: ["1","2"]
+  },
+  {
+    f1: "b",
+    f2: "a",
+    f3: ["1","3"]
+  },
+  {
+    f1: "b",
+    f2: "b",
+    f3: ["4","5"]
+  },
+]
+db.foo.insert(docs)
+db.foo.findOne()
