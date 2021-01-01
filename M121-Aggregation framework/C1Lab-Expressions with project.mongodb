@@ -60,11 +60,40 @@ pipeline = [
       $map: {
         input: "$directors",
         as: "director",
-        in: "$$director"
+        in: {
+          $in: [ 
+            "$$director", 
+            "$cast" 
+          ]
+        } // in
+      } // map
+    },
+    directorsInWriters: {
+      $map: {
+        input: "$directors",
+        as: "director",
+        in: {
+          $in: [ 
+            "$$director", 
+            "$writers" 
+          ]
+        } // in
+      } // map
+    }
+  }},
+  {$project: {
+    "_id" : 0,
+    title:1, cast: 1, directors: 1, writers: 1,
+    directorsInCast: 1, directorsInWriters: 1,
+    arrayAnd: {
+      $map: {
+        input: {"$range":[0,{$size: "$directors"}]},
+        as: "i",
+        in: "$$i"
       }
     }
   }},
-  { $limit: 5 }
+  { $limit: 15 }
 ]
 
 // db.movies.aggregate(pipeline).itcount()
