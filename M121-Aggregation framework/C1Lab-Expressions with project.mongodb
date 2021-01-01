@@ -27,11 +27,14 @@ db.movies.aggregate([
 ]).itcount()
 
 How many movies are "labors of love"?
+
+Correct answer: 1596
 */
 let pipeline
 
 
 // V1
+// Too complex, I think it can be simplified
 pipeline = [
   // {$match: {
   //   "directors": "Quentin Tarantino"
@@ -42,7 +45,9 @@ pipeline = [
   // "Roberto Benigni (story)" => "Roberto Benigni"
   {$project: {
     "_id" : 0,
-    title:1, cast: 1, directors: 1,
+    title:1, 
+    cast: { $ifNull: [ "$cast", [] ] }, 
+    directors: { $ifNull: [ "$directors", [] ] },
     writers: {
       $map: {
         input: "$writers",
@@ -59,92 +64,70 @@ pipeline = [
     }
   }},
   // Generate two new fields from the director one
-  // - directorsInCast: true if $cast includes the director
-  // - directorsInWriters: true if $writers includes the director
+  // - directorInCast: true if $cast includes the director
+  // - directorInWriters: true if $writers includes the director
   {$project: {
     "_id" : 0,
     title:1, cast: 1, directors: 1, writers: 1,
-    directorsInCast: {
+    directorInCast: {
       $map: {
         input: "$directors",
         as: "director",
         in: {
           $in: [ 
             "$$director", 
-            "$cast" 
+            "$cast"
           ]
         } // in
       } // map
     },
-    directorsInWriters: {
+    directorInWriters: {
       $map: {
         input: "$directors",
         as: "director",
         in: {
           $in: [ 
             "$$director", 
-            "$writers" 
+            { $ifNull: [ "$writers", [] ] }
           ]
         } // in
       } // map
     }
   }},
-  // Perform an element by element "and" between directorsInCast and directorsInWriters
+  // Perform an element by element "and" between directorInCast and directorInWriters
   {$project: {
     "_id" : 0,
     title:1, cast: 1, directors: 1, writers: 1,
-    directorsInCast: 1, directorsInWriters: 1,
-    directorsInCastAndWriters: {
+    directorInCast: 1, directorInWriters: 1,
+    directorInCastAndWriters: {
       $map: {
         input: {"$range":[0,{$size: "$directors"}]},
         as: "i",
         in: {
           $and: [
-            { $arrayElemAt: ["$directorsInCast", "$$i"] },
-            { $arrayElemAt: ["$directorsInWriters","$$i"] }
+            { $arrayElemAt: ["$directorInCast", "$$i"] },
+            { $arrayElemAt: ["$directorInWriters","$$i"] }
           ]
         } // in
       } // map
     }
   }},
-  {$project: {
-    "_id" : 0,
-    title:1, cast: 1, directors: 1, writers: 1,
-    directorsInCast: 1, directorsInWriters: 1, directorsInCastAndWriters: 1,
-    foo: {
-      $reduce: {
-        input: "$directorsInCastAndWriters",
-        initialValue: false,
-        in: {
-          $or: [
-            "$$value",
-            "$$this"
-          ]
-        }
-      }
-    }
-  }}
-  // {$match: { "foo": true }}
-  // { $limit: 15 }
+  // Returns true if one of the element is true
+  { $match: { directorInCastAndWriters: true } }
+  // ,{ $limit: 15 } // For debugging
 ]
 
-// db.movies.aggregate(pipeline).itcount()
-db.movies.aggregate(pipeline)
+db.movies.aggregate(pipeline).itcount()
+// db.movies.aggregate(pipeline)
 
 
 // db.movies.find({
 //   "directors": "Quentin Tarantino"
 // }).pretty();
 
-/*
-db.movies.find({
-  writers:{
-    $exists:true,
-    $ne:[]
-  }
-}).pretty();
-*/
 // db.movies.find({
-//   directors: "Quentin Tarantino",
-//   cast: "Quentin Tarantino"
+//   writers:{
+//     $exists:true,
+//     $ne:[]
+//   }
 // }).pretty();
