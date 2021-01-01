@@ -28,31 +28,39 @@ db.movies.aggregate([
 
 How many movies are "labors of love"?
 */
-
-/*
-    "directors": [
-      "Georges M�li�s"
-    ],
-*/
-/*
-    "cast": [
-      "Jeanne d'Alcy",
-      "Georges M�li�s"
-    ],
-*/
-/*
-    "writers": [
-      "Georges M�li�s"
-    ],
-*/
-
 let pipeline
 
+
+// V1
 pipeline = [
-  {$match: {
-    "directors": "Quentin Tarantino"
+  // {$match: {
+  //   "directors": "Quentin Tarantino"
+  //   }
+  // },
+  // Don't know if this is necesary for the exercise
+  // Removes the additional information in writers field as in:
+  // "Roberto Benigni (story)" => "Roberto Benigni"
+  {$project: {
+    "_id" : 0,
+    title:1, cast: 1, directors: 1,
+    writers: {
+      $map: {
+        input: "$writers",
+        as: "writer",
+        in: {
+          $arrayElemAt: [
+            {
+              $split: [ "$$writer", " (" ]
+            },
+            0
+          ]
+        }
+      }
     }
-  },
+  }},
+  // Generate two new fields from the director one
+  // - directorsInCast: true if $cast includes the director
+  // - directorsInWriters: true if $writers includes the director
   {$project: {
     "_id" : 0,
     title:1, cast: 1, directors: 1, writers: 1,
@@ -81,19 +89,43 @@ pipeline = [
       } // map
     }
   }},
+  // Perform an element by element "and" between directorsInCast and directorsInWriters
   {$project: {
     "_id" : 0,
     title:1, cast: 1, directors: 1, writers: 1,
     directorsInCast: 1, directorsInWriters: 1,
-    arrayAnd: {
+    directorsInCastAndWriters: {
       $map: {
         input: {"$range":[0,{$size: "$directors"}]},
         as: "i",
-        in: "$$i"
-      }
+        in: {
+          $and: [
+            { $arrayElemAt: ["$directorsInCast", "$$i"] },
+            { $arrayElemAt: ["$directorsInWriters","$$i"] }
+          ]
+        } // in
+      } // map
     }
   }},
-  { $limit: 15 }
+  {$project: {
+    "_id" : 0,
+    title:1, cast: 1, directors: 1, writers: 1,
+    directorsInCast: 1, directorsInWriters: 1, directorsInCastAndWriters: 1,
+    foo: {
+      $reduce: {
+        input: "$directorsInCastAndWriters",
+        initialValue: false,
+        in: {
+          $or: [
+            "$$value",
+            "$$this"
+          ]
+        }
+      }
+    }
+  }}
+  // {$match: { "foo": true }}
+  // { $limit: 15 }
 ]
 
 // db.movies.aggregate(pipeline).itcount()
