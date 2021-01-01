@@ -14,8 +14,11 @@ To get the count, you can append itcount() to the end of your pipeline
 db.movies.aggregate([...]).itcount()
 */
 
+
+let pipeline
+
 // V1
-var pipeline = [
+pipeline = [
     {$project: { 
       title: 1,
       titleWords: { $split: ["$title", " "] }
@@ -32,7 +35,20 @@ var pipeline = [
     },
     // { $limit: 5 }
 ]
+//8066
 
-
+// V2
+pipeline = [
+    {$project: {
+      title: 1,
+      numWords: { $size: { $split: ["$title", " "] } }
+      }
+    },
+    {$match: {
+      numWords: 1
+      }
+    },
+    // { $limit: 5 }
+]
 
 db.movies.aggregate(pipeline).itcount()
