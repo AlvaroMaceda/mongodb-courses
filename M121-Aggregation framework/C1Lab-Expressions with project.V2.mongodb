@@ -1,0 +1,98 @@
+/*
+Let's find how many movies in our movies collection are a "labor of love", 
+where the same person appears in cast, directors, and writers
+
+Hint: You will need to use $setIntersection operator in the aggregation pipeline 
+to find out the result.
+
+Note that your dataset may have duplicate entries for some films. 
+You do not need to count the duplicate entries.
+
+To get a count after you have defined your pipeline, there are two simple methods.
+
+// add the $count stage to the end of your pipeline
+// you will learn about this stage shortly!
+db.movies.aggregate([
+  {$stage1},
+  {$stage2},
+  {...$stageN},
+  { $count: "labors of love" }
+])
+
+// or use itcount()
+db.movies.aggregate([
+  {$stage1},
+  {$stage2},
+  {...$stageN}
+]).itcount()
+
+How many movies are "labors of love"?
+
+Correct answer: 1596
+*/
+let pipeline
+
+
+// V2
+pipeline = [
+  // {$match: {
+  //   "directors": "Quentin Tarantino"
+  //   }
+  // },
+  {$project: {
+    "_id" : 0,
+    title:1, 
+    cast: { $ifNull: [ "$cast", [] ] }, 
+    directors: { $ifNull: [ "$directors", [] ] },
+    writers: { $ifNull: [ "$writers", [] ] }
+  }},    
+  // This is necesary for the exercise
+  // Removes the additional information in writers field as in:
+  // "Roberto Benigni (story)" => "Roberto Benigni"
+  {$project: {
+    "_id" : 0,
+    title:1, cast: 1, directors: 1,
+    writers: {
+      $map: {
+        input: "$writers",
+        as: "writer",
+        in: {
+          $arrayElemAt: [
+            {
+              $split: [ "$$writer", " (" ]
+            },
+            0
+          ]
+        }
+      }
+    }    
+  }}, 
+  {$project: {
+    "_id" : 0,
+    title:1, cast: 1, directors: 1, writers: 1,
+    intersection: {
+      $setIntersection: [ 
+        "$cast", "$directors", "$writers"
+      ]
+    }
+  }},
+  { $match: { 
+      intersection: { $ne: []}
+  }},
+  // { $limit: 15 } // For debugging
+]
+
+db.movies.aggregate(pipeline)
+// db.movies.aggregate(pipeline).itcount()
+
+
+// db.movies.find({
+//   "directors": "Quentin Tarantino"
+// }).pretty();
+
+// db.movies.find({
+//   writers:{
+//     $exists:true,
+//     $ne:[]
+//   }
+// }).pretty();
