@@ -6,8 +6,54 @@ the minimum imdb.rating is at least 1, the minimum imdb.votes is at least 1,
 and it was released in 1990 or after. 
 
 You'll be required to rescale (or normalize) imdb.votes. 
-The formula to rescale imdb.votes and calculate normalized_rating is included as a handout.
+The formula to rescale imdb.votes and calculate normalized_rating is included as a handout (scaling.js)
 
 What film has the lowest normalized_rating?
 
+Correct answer: "The Christmas Tree"
 */
+
+let x_max = 1521105
+let x_min = 5
+let min = 1
+let max = 10
+// x = imdb.votes
+// scaled_votes = 1 + 9 * ((x - x_min) / (x_max - x_min))
+// normalized_rating = average(scaled_votes, imdb.rating)
+
+let pipeline = [
+  {$project: {
+    _id: 0, title: 1, languages: 1, imdb: 1, released: 1, year: 1
+  }},
+  {$match: {
+    languages: "English",
+    "imdb.rating": { $gte: 1 },
+    "imdb.votes": { $gte: 1 },
+    released: { $gte: ISODate("1990-01-01T00:00:00.000Z") }
+  }},
+  {$addFields: {
+    scaled_votes: {
+      $add: [
+        1,
+        {
+          $multiply: [
+            9,
+            {
+              $divide: [
+                { $subtract: ["$imdb.votes", x_min] },
+                { $subtract: [x_max, x_min] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }},
+  {$addFields: {
+    normalized_rating: { $avg: ["$scaled_votes","$imdb.rating"] }
+  }},
+  {$sort: { "normalized_rating": 1 }}
+]
+
+db.movies.aggregate(pipeline)
+// db.movies.aggregate(pipeline).itcount()
