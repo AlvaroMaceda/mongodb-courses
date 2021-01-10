@@ -18,6 +18,8 @@ load('./validateLab2.js')
 validateLab2(pipeline)
 
 What is the answer?
+
+Correct answer: 15
 */
 
 var pipeline = [

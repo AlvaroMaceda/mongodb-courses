@@ -19,6 +19,8 @@ load('validateLab1.js')
     And run the validateLab1 validation method
 
 validateLab1(pipeline)
+
+Correct answer: 15
 */
 
 use aggregations;
