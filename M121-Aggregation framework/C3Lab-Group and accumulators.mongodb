@@ -12,8 +12,41 @@ Won 13 Oscars
 Won 1 Oscar
 
 Select the correct answer from the choices below. Numbers are truncated to 4 decimal places.
+
+Correct answer:
+[
+  {
+    "_id": null,
+    "highest_rating": 9.2,
+    "lowest_rating": 4.5,
+    "average_rating": 7.527,
+    "deviation": 0.5988
+  }
+]
+We must use stdDevSamp because we don't have the entire population of movies in the db
+
 */
-db.movies.find(
-  // { title: "La La Land" }
-  { awards: { $ne: null} }
-)
+
+
+let pipeline = [
+  {$match: {
+    awards: { $regex : /^Won \d* Oscar/ }
+  }},
+  {$project: {
+    _id: 0, title: 1, awards: 1, "imdb.rating": 1
+  }},
+  {$group:{
+    _id: null,
+    highest_rating: { $max : "$imdb.rating" },
+    lowest_rating: { $min : "$imdb.rating" },
+    average_rating: { $avg : "$imdb.rating" },
+    deviation: { $stdDevSamp : "$imdb.rating" },
+    
+  }},
+  {$addFields: { 
+    average_rating: { $round: ["$average_rating", 4]},
+    deviation: { $round: ["$deviation", 4]},
+  }}
+]
+
+db.movies.aggregate(pipeline)
