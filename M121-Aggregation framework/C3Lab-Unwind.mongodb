@@ -1,0 +1,61 @@
+/*
+
+Let's use our increasing knowledge of the Aggregation Framework to explore 
+our movies collection in more detail. 
+
+We'd like to calculate how many movies every cast member has been in 
+and get an average imdb.rating for each cast member.
+
+What is the name, number of movies, and average rating 
+(truncated to one decimal) for the cast member that has been in the most number 
+of movies with English as an available language?
+
+Provide the input in the following order and format:
+
+{ "_id": "First Last", "numFilms": 1, "average": 1.1 }
+
+Correct answer:
+{
+  "_id": "John Wayne",
+  "numFilms": 107,
+  "average": 6.4
+}
+
+*/
+
+let pipeline
+
+pipeline = [
+  {
+    $match: {
+      languages: "English"
+    }
+  },
+  {
+    $project: {
+      _id:0, title: 1, languages: 1, cast: 1, "imdb.rating": 1
+    }
+  },
+  {
+    $unwind: "$cast"
+  },
+  {
+    $group: {
+      _id: "$cast",
+      numFilms: { $sum: 1},
+      average: { $avg: "$imdb.rating"},
+    }
+  },
+  {
+    $addFields: {
+      average: { $round: ["$average", 1]}
+    }
+  },
+  {
+    $sort: { "numFilms": -1 }
+  },
+  { $limit: 1 }
+]
+
+
+db.movies.aggregate(pipeline)
